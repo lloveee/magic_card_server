@@ -1,138 +1,131 @@
 ﻿using SpacetimeDB;
-namespace StdbModule;
+using StdbModule.AuthModule;
+using StdbModule.GamePlayModule.CardData;
+using BaseCard = StdbModule.GamePlayModule.CardData.BaseCard;
+using HeroCard = StdbModule.GamePlayModule.CardData.HeroCard;
 
-public static partial class InitModule
+namespace StdbModule
 {
-    [Reducer(ReducerKind.Init)]
-    public static void Initialization(ReducerContext ctx)
+    public static partial class InitModule
     {
-        InitAccount(ctx);
-        InitUserProfile(ctx);
-        InitHeroCard(ctx);
-        InitBaseCard(ctx);
-    }
-
-    [Reducer(ReducerKind.ClientConnected)]
-    public static void ClientConnected(ReducerContext ctx)
-    {
-        if (ctx.TryFindConnection(ctx.Sender, out var connection))
+        [Reducer(ReducerKind.Init)]
+        public static void Initialization(ReducerContext ctx)
         {
-            connection.IsConnected = true;
-            ctx.Db.c_connection.Identity.Update(connection);
-        }
-        else
-        {  
-            ctx.Db.c_connection.Insert(new Connection
-            {
-                Identity = ctx.Sender,
-                IsConnected = true
-            });
-        }
-    }
-    
-    [Reducer(ReducerKind.ClientDisconnected)]
-    public static void ClientDisConnected(ReducerContext ctx)
-    {
-        if (ctx.TryFindAuthAccount(out var account))
-        {
-            account.IsOnline = false;
-            account.CurrentIdentity = default;
-            ctx.Db.auth_account.AccountId.Update(account);
+            InitAccount(ctx);
+            InitHeroCard(ctx);
+            InitBaseCard(ctx);
         }
 
-        if (ctx.TryFindConnection(ctx.Sender, out var connection))
+        [Reducer(ReducerKind.ClientConnected)]
+        public static void ClientConnected(ReducerContext ctx)
         {
-            connection.IsConnected = false;
-            ctx.Db.c_connection.Identity.Update(connection);
-        }
-    }
-
-    private static void InitAccount(ReducerContext ctx)
-    {
-        ctx.BulkInsertAccount([
-            new AuthAccount
+            if (ctx.TryFindConnection(ctx.Sender, out var connection))
             {
-                Username = "admin",
-                Password = "admin",
-                IsOnline = false,
-                CurrentIdentity = default,
-                CreatedAt = ctx.Timestamp
-            },
-            new AuthAccount
-            {
-                Username = "admin2",
-                Password = "admin2",
-                IsOnline = false,
-                CurrentIdentity = default,
-                CreatedAt = ctx.Timestamp
+                connection.IsConnected = true;
+                ctx.Db.c_connection.Identity.Update(connection);
             }
-        ]);
-    }
-
-    private static void InitUserProfile(ReducerContext ctx)
-    {
-        foreach (var a in ctx.Db.auth_account.Iter())
-        {
-            ctx.Db.user_profile.Insert(new UserProfile
-            {
-                AccountId = a.AccountId,
-                Wins = 0,
-                Losses = 0,
-                CurrentMatchId = default,
-                InMatch = false,
-            });
-        }
-    }
-
-    private static void InitHeroCard(ReducerContext ctx)
-    {
-        ctx.BulkInsertHeroCard([
-            new HeroCard()
-            {
-                CardName = "Test Hero1",
-                CardDescription = "This is a test for hero1"
-            },
-            new HeroCard()
-            {
-                CardName = "Test Hero2",
-                CardDescription = "This is a test for hero2"
+            else
+            {  
+                ctx.Db.c_connection.Insert(new AuthModule.Connection
+                {
+                    Identity = ctx.Sender,
+                    IsConnected = true
+                });
             }
-        ]);
-    }
-
-    private static void InitBaseCard(ReducerContext ctx)
-    {
-        List<BaseCard> initCard = new List<BaseCard>();
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Dream, CardType.Attack, "梦境攻击"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Dream, CardType.Skill, "梦境技能"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Dream, CardType.Energy, "梦境能耗"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Illusion, CardType.Attack, "虚幻攻击"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Illusion, CardType.Skill, "虚幻技能"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Illusion, CardType.Energy, "虚幻能耗"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Rebirth, CardType.Attack, "轮回攻击"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Rebirth, CardType.Skill, "轮回技能"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Rebirth, CardType.Attack, "轮回能耗"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Reshape, CardType.Attack, "重组攻击"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Reshape, CardType.Skill, "重组技能"));
-        initCard.AddRange(GetAllLevelWithDetail(CardFaction.Reshape, CardType.Energy, "重组能耗"));
-        ctx.BulkInsertBaseCard(initCard);
-    }
-
-    private static IList<BaseCard> GetAllLevelWithDetail(CardFaction faction, CardType type, string description,
-        int l = 1, int r = 5)
-    {
-        IList<BaseCard> res = new List<BaseCard>();
-        for (int i = l; i <= r; i++)
+        }
+        
+        [Reducer(ReducerKind.ClientDisconnected)]
+        public static void ClientDisConnected(ReducerContext ctx)
         {
-            res.Add(new BaseCard
+            if (ctx.TryFindAuthAccount(out var account))
             {
-                CardFaction = faction,
-                CardType = type,
-                CardDescription = description,
-                CardLevel = (uint)i,
-            });
+                account.IsOnline = false;
+                account.CurrentIdentity = default;
+                ctx.Db.auth_account.AccountId.Update(account);
+            }
+
+            if (ctx.TryFindConnection(ctx.Sender, out var connection))
+            {
+                connection.IsConnected = false;
+                ctx.Db.c_connection.Identity.Update(connection);
+            }
         }
 
-        return res;
+        private static void InitAccount(ReducerContext ctx)
+        {
+            ctx.BulkInsertAccount([
+                new AuthAccount
+                {
+                    Username = "admin",
+                    Password = "admin",
+                    IsOnline = false,
+                    CurrentIdentity = default,
+                    CreatedAt = ctx.Timestamp
+                },
+                new AuthAccount
+                {
+                    Username = "admin2",
+                    Password = "admin2",
+                    IsOnline = false,
+                    CurrentIdentity = default,
+                    CreatedAt = ctx.Timestamp
+                }
+            ]);
+        }
+
+        private static void InitHeroCard(ReducerContext ctx)
+        {
+            /*
+            ctx.BulkInsertHeroCard([
+                new HeroCard()
+                {
+                    CardName = "Test Hero1",
+                    CardDescription = "This is a test for hero1",
+                    
+                },
+                new HeroCard()
+                {
+                    CardName = "Test Hero2",
+                    CardDescription = "This is a test for hero2"
+                }
+            ]);*/
+        }
+
+        private static void InitBaseCard(ReducerContext ctx)
+        {
+            List<BaseCard> initCard = new List<BaseCard>();
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Dream, CardType.Attack, "梦境攻击"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Dream, CardType.Skill, "梦境技能"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Dream, CardType.Energy, "梦境能耗"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Illusion, CardType.Attack, "虚幻攻击"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Illusion, CardType.Skill, "虚幻技能"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Illusion, CardType.Energy, "虚幻能耗"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Rebirth, CardType.Attack, "轮回攻击"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Rebirth, CardType.Skill, "轮回技能"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Rebirth, CardType.Attack, "轮回能耗"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Reshape, CardType.Attack, "重组攻击"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Reshape, CardType.Skill, "重组技能"));
+            initCard.AddRange(GetAllLevelWithDetail(CardFaction.Reshape, CardType.Energy, "重组能耗"));
+            ctx.BulkInsertBaseCard(initCard);
+        }
+
+        private static IList<BaseCard> GetAllLevelWithDetail(CardFaction faction, CardType type, string description,
+            int l = 1, int r = 5)
+        {
+            IList<BaseCard> res = new List<BaseCard>();
+            for (int i = l; i <= r; i++)
+            {
+                res.Add(new BaseCard
+                {
+                    CardFaction = faction,
+                    CardType = type,
+                    CardDescription = description,
+                    CardLevel = (uint)i,
+                });
+            }
+
+            return res;
+        }
     }
 }
+
