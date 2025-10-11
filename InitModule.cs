@@ -1,6 +1,7 @@
 ﻿using SpacetimeDB;
 using StdbModule.AuthModule;
 using StdbModule.GamePlayModule.CardData;
+using StdbModule.Utils;
 using BaseCard = StdbModule.GamePlayModule.CardData.BaseCard;
 using HeroCard = StdbModule.GamePlayModule.CardData.HeroCard;
 

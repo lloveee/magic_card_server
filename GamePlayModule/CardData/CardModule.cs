@@ -1,4 +1,8 @@
-﻿using SpacetimeDB;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text;
+using SpacetimeDB;
+using StdbModule.AuthModule;
+using StdbModule.Utils;
 
 namespace StdbModule.GamePlayModule.CardData
 {
@@ -7,17 +11,33 @@ namespace StdbModule.GamePlayModule.CardData
         [Reducer]
         public static void BulkInsertOrUpdateHeroCard(this ReducerContext ctx, List<HeroCard> cards)
         {
+            StringBuilder sb = new StringBuilder();
             foreach (var card in cards)
             {
                 if (ctx.TryFindHeroCard(card.CardName, out var c_card))
                 {
+                    sb.Append($"{c_card.HeroCardId}:{c_card.CardName}:{c_card.CardDescription}:{c_card.Stats}\n");
                     c_card.CardDescription = card.CardDescription;
                     c_card.Stats = card.Stats;
                     ctx.Db.hero_card.CardName.Update(c_card);
                 }
                 else ctx.Db.hero_card.Insert(card);
             }
-            //TODO: Calculate Hash Code
+            //TODO: Calculate Hash Code And Add HeroCard Hash Validation
+            var finalJson = sb.ToString();
+            ctx.TryInsertValidateInfo(nameof(ValidateTarget.HeroCard), HashUtils.ComputeHash(finalJson));
+        }
+
+        [Reducer]
+        public static void TryValidateHeroCard(this ReducerContext ctx, List<HeroCard> cards)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var card in cards)
+            {
+                sb.Append($"{card.HeroCardId}:{card.CardName}:{card.CardDescription}:{card.Stats}\n");
+            }
+            var finalJson = sb.ToString();
+            if (!ctx.Validate(nameof(ValidateTarget.HeroCard), finalJson)) throw new ValidationException("card error");
         }
 
         private static bool TryFindHeroCard(this ReducerContext ctx, string cardName, out HeroCard card)
