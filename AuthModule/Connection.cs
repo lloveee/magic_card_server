@@ -8,5 +8,6 @@ namespace StdbModule.AuthModule
         [PrimaryKey] 
         public Identity Identity;
         public bool IsConnected;
+        public bool IsValidated;
     }
 }

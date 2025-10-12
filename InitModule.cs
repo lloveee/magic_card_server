@@ -30,7 +30,8 @@ namespace StdbModule
                 ctx.Db.c_connection.Insert(new AuthModule.Connection
                 {
                     Identity = ctx.Sender,
-                    IsConnected = true
+                    IsConnected = true,
+                    IsValidated = false
                 });
             }
         }
@@ -48,6 +49,7 @@ namespace StdbModule
             if (ctx.TryFindConnection(ctx.Sender, out var connection))
             {
                 connection.IsConnected = false;
+                connection.IsValidated = false;
                 ctx.Db.c_connection.Identity.Update(connection);
             }
         }

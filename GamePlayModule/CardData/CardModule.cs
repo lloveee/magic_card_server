@@ -16,12 +16,12 @@ namespace StdbModule.GamePlayModule.CardData
             {
                 if (ctx.TryFindHeroCard(card.CardName, out var c_card))
                 {
-                    sb.Append($"{c_card.HeroCardId}:{c_card.CardName}:{c_card.CardDescription}:{c_card.Stats}\n");
                     c_card.CardDescription = card.CardDescription;
                     c_card.Stats = card.Stats;
                     ctx.Db.hero_card.CardName.Update(c_card);
                 }
                 else ctx.Db.hero_card.Insert(card);
+                sb.Append($"{card.HeroCardId}:{card.CardName}:{card.CardDescription}:{card.Stats}\n");
             }
             
             var finalJson = sb.ToString();
@@ -55,6 +55,11 @@ namespace StdbModule.GamePlayModule.CardData
             }
             var finalJson = sb.ToString();
             if (!ctx.Validate(nameof(ValidateTarget.HeroCard), finalJson)) throw new ValidationException("card error");
+            if(ctx.TryFindConnection(ctx.Sender, out var connection))
+            {
+                connection.IsValidated = true;
+                ctx.Db.c_connection.Identity.Update(connection);
+            }
         }
 
         private static bool TryFindHeroCard(this ReducerContext ctx, string cardName, out HeroCard card)

@@ -1,4 +1,6 @@
-﻿using SpacetimeDB;
+﻿using System.Security.Authentication;
+using SpacetimeDB;
+using StdbModule.CustomException;
 
 namespace StdbModule.AuthModule
 {
@@ -9,12 +11,15 @@ namespace StdbModule.AuthModule
         {
             var player = ctx.FindAuthAccount(username) ?? throw new ArgumentException("Username not found");
             if (!player.Password.Equals(password)) throw new ArgumentException("Password not correct");
+            if (!ctx.TryFindConnection(ctx.Sender, out var connection)) throw new AuthFailedException("connection not found");
+            if (!connection.IsValidated) throw new AuthFailedException("data is not valid");
             if (player.IsOnline)
             {
                 var old_player = ctx.FindAuthAccount(username) ?? throw new ArgumentException("Username not found");
                 if (ctx.TryFindConnection(old_player.CurrentIdentity, out var old_connection)) //try kick
                 {
                     old_connection.IsConnected = false;
+                    old_connection.IsValidated = false;
                     ctx.Db.c_connection.Identity.Update(old_connection);
                 }
                 old_player.CurrentIdentity = default;
@@ -40,7 +45,7 @@ namespace StdbModule.AuthModule
         public static void AuthRegister(ReducerContext ctx, string username, string password)
         {
             if (ctx.TryFindAuthAccount(username, out _)) throw new ArgumentException("Username already exists");
-            var account = ctx.Db.auth_account.Insert(new AuthModule.AuthAccount
+            ctx.Db.auth_account.Insert(new AuthAccount
             {
                 Username = username,
                 Password = password,
