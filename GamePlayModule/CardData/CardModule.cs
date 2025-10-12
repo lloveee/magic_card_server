@@ -23,7 +23,24 @@ namespace StdbModule.GamePlayModule.CardData
                 }
                 else ctx.Db.hero_card.Insert(card);
             }
-            //TODO: Calculate Hash Code And Add HeroCard Hash Validation
+            
+            var finalJson = sb.ToString();
+            ctx.TryInsertValidateInfo(nameof(ValidateTarget.HeroCard), HashUtils.ComputeHash(finalJson));
+        }
+
+        [Reducer]
+        public static void ReInsertHeroCard(this ReducerContext ctx, List<HeroCard> cards)
+        {
+            foreach (var c in ctx.Db.hero_card.Iter().ToArray())
+            {
+                ctx.Db.hero_card.HeroCardId.Delete(c.HeroCardId);
+            }
+            StringBuilder sb = new StringBuilder();
+            foreach (var card in cards)
+            {
+                sb.Append($"{card.HeroCardId}:{card.CardName}:{card.CardDescription}:{card.Stats}\n");
+                ctx.Db.hero_card.Insert(card);
+            }
             var finalJson = sb.ToString();
             ctx.TryInsertValidateInfo(nameof(ValidateTarget.HeroCard), HashUtils.ComputeHash(finalJson));
         }
