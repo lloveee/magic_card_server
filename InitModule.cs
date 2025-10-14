@@ -9,12 +9,15 @@ namespace StdbModule
 {
     public static partial class InitModule
     {
+        private static Dictionary<string, (string, string)> RSAKeys = new();
         [Reducer(ReducerKind.Init)]
         public static void Initialization(ReducerContext ctx)
         {
-            InitAccount(ctx);
-            InitHeroCard(ctx);
-            InitBaseCard(ctx);
+            ctx.InitRSAKey();
+            ctx.InitAccount();
+            ctx.InitHeroCard();
+            ctx.InitBaseCard();
+            
         }
 
         [Reducer(ReducerKind.ClientConnected)]
@@ -54,7 +57,7 @@ namespace StdbModule
             }
         }
 
-        private static void InitAccount(ReducerContext ctx)
+        private static void InitAccount(this ReducerContext ctx)
         {
             ctx.BulkInsertAccount([
                 new AuthAccount
@@ -76,7 +79,7 @@ namespace StdbModule
             ]);
         }
 
-        private static void InitHeroCard(ReducerContext ctx)
+        private static void InitHeroCard(this ReducerContext ctx)
         {
             /*
             ctx.BulkInsertHeroCard([
@@ -94,7 +97,12 @@ namespace StdbModule
             ]);*/
         }
 
-        private static void InitBaseCard(ReducerContext ctx)
+        private static void InitRSAKey(this ReducerContext ctx)
+        {
+            ctx.TryUpdateSignature(nameof(ValidateTarget.HeroCard));
+        }
+
+        private static void InitBaseCard(this ReducerContext ctx)
         {
             List<BaseCard> initCard = new List<BaseCard>();
             initCard.AddRange(GetAllLevelWithDetail(CardFaction.Dream, CardType.Attack, "梦境攻击"));

@@ -11,7 +11,6 @@ namespace StdbModule.GamePlayModule.CardData
         [Reducer]
         public static void BulkInsertOrUpdateHeroCard(this ReducerContext ctx, List<HeroCard> cards)
         {
-            StringBuilder sb = new StringBuilder();
             foreach (var card in cards)
             {
                 if (ctx.TryFindHeroCard(card.CardName, out var c_card))
@@ -21,10 +20,9 @@ namespace StdbModule.GamePlayModule.CardData
                     ctx.Db.hero_card.CardName.Update(c_card);
                 }
                 else ctx.Db.hero_card.Insert(card);
-                sb.Append($"{card.HeroCardId}:{card.CardName}:{card.CardDescription}:{card.Stats}\n");
             }
-            
-            var finalJson = sb.ToString();
+            var finalJson = ctx.SerializeHeroCardsToBase64(cards);
+            ctx.TryUpdateSignature(nameof(ValidateTarget.HeroCard), finalJson);
             ctx.TryInsertValidateInfo(nameof(ValidateTarget.HeroCard), HashUtils.ComputeHash(finalJson));
         }
 
@@ -35,25 +33,19 @@ namespace StdbModule.GamePlayModule.CardData
             {
                 ctx.Db.hero_card.HeroCardId.Delete(c.HeroCardId);
             }
-            StringBuilder sb = new StringBuilder();
             foreach (var card in cards)
             {
-                sb.Append($"{card.HeroCardId}:{card.CardName}:{card.CardDescription}:{card.Stats}\n");
                 ctx.Db.hero_card.Insert(card);
             }
-            var finalJson = sb.ToString();
+            var finalJson = ctx.SerializeHeroCardsToBase64(cards);
+            ctx.TryUpdateSignature(nameof(ValidateTarget.HeroCard), finalJson);
             ctx.TryInsertValidateInfo(nameof(ValidateTarget.HeroCard), HashUtils.ComputeHash(finalJson));
         }
 
         [Reducer]
         public static void TryValidateHeroCard(this ReducerContext ctx, List<HeroCard> cards)
         {
-            StringBuilder sb = new StringBuilder();
-            foreach (var card in cards)
-            {
-                sb.Append($"{card.HeroCardId}:{card.CardName}:{card.CardDescription}:{card.Stats}\n");
-            }
-            var finalJson = sb.ToString();
+            var finalJson = ctx.SerializeHeroCardsToBase64(cards);
             if (!ctx.Validate(nameof(ValidateTarget.HeroCard), finalJson)) throw new ValidationException("card error");
             if(ctx.TryFindConnection(ctx.Sender, out var connection))
             {
