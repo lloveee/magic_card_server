@@ -14,6 +14,29 @@ namespace StdbModule.GamePlayModule.CardData
         public CardFaction CardFaction;
         public string CardDescription;
     }
+    [Table(Name = "card_faction_weight")]
+    public partial struct CardFactionWeight
+    {
+        [PrimaryKey] 
+        public string InstanceId;
+        public float Weight;
+    }
+
+    [Table(Name = "card_type_weight")]
+    public partial struct CardTypeWeight
+    {
+        [PrimaryKey]
+        public string InstanceId;
+        public float Weight;
+    }
+
+    [Table(Name = "card_level_weight")]
+    public partial struct CardLevelWeight
+    {
+        [PrimaryKey]
+        public string InstanceId;
+        public float Weight;
+    }
 
     [Type]
     public enum CardType

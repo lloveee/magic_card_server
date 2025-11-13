@@ -37,6 +37,12 @@ namespace StdbModule.GamePlayModule
             return ctx.Db.player_account.Username.Find(username);
         }
 
+        public static bool TryFindPlayerAccount(this ReducerContext ctx, string username, out PlayerAccount player)
+        {
+            player = ctx.Db.player_account.Username.Find(username).GetValueOrDefault();
+            return player != default;
+        }
+
         public static void TryInsertPlayer(this ReducerContext ctx, PlayerAccount player)
         {
             if (ctx.FindPlayerAccount(player.Username) != null) return;
