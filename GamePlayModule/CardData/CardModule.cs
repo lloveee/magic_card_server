@@ -115,7 +115,11 @@ namespace StdbModule.GamePlayModule.CardData
                 ctx.Db.card_type_weight.InstanceId.Update(a);
             }
         }
-        
+
+        public static void TryRemoveCardWeight(this ReducerContext ctx, uint match_id, CardType type)
+        {
+            ctx.Db.card_type_weight.InstanceId.Delete($"{match_id}_{type}");
+        }
         public static void TrySetCardWeight(this ReducerContext ctx, uint match_id, CardFaction faction, float weight)
         {
             var a = ctx.Db.card_type_weight.InstanceId.Find($"{match_id}_{faction}").GetValueOrDefault();
@@ -132,6 +136,11 @@ namespace StdbModule.GamePlayModule.CardData
                 a.Weight = weight;
                 ctx.Db.card_type_weight.InstanceId.Update(a);
             }
+        }
+
+        public static void TryRemoveCardWeight(this ReducerContext ctx, uint match_id, CardFaction faction)
+        {
+            ctx.Db.card_faction_weight.InstanceId.Delete($"{match_id}_{faction}");
         }
         
         public static void TrySetCardWeight(this ReducerContext ctx, uint match_id, uint level, float weight)
@@ -152,6 +161,11 @@ namespace StdbModule.GamePlayModule.CardData
             }
         }
 
+        public static void TryRemoveCardWeight(this ReducerContext ctx, uint match_id, uint level)
+        {
+            ctx.Db.card_level_weight.InstanceId.Delete($"{match_id}_{level}");
+        }
+        
         private static bool TryFindHeroCard(this ReducerContext ctx, string cardName, out HeroCard card)
         {
             card = ctx.Db.hero_card.CardName.Find(cardName).GetValueOrDefault();

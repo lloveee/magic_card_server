@@ -1,9 +1,8 @@
 ﻿using SpacetimeDB;
 using StdbModule.AuthModule;
 using StdbModule.GamePlayModule.CardData;
-using StdbModule.Utils;
+using StdbModule.GamePlayModule.Match;
 using BaseCard = StdbModule.GamePlayModule.CardData.BaseCard;
-using HeroCard = StdbModule.GamePlayModule.CardData.HeroCard;
 
 namespace StdbModule
 {
@@ -47,6 +46,7 @@ namespace StdbModule
                 account.IsOnline = false;
                 account.CurrentIdentity = default;
                 ctx.Db.auth_account.AccountId.Update(account);
+                ctx.TryClearPracticeGame(account.Username);
             }
 
             if (ctx.TryFindConnection(ctx.Sender, out var connection))

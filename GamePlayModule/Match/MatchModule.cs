@@ -16,6 +16,7 @@ namespace StdbModule.GamePlayModule.Match
             {
                 var m = ctx.InsertMatchContext(targetPlayerCount);
                 ctx.InsertPlayerContext(player.Username, m.MatchId, stats, 0, UInt32.MaxValue);
+                return;
             }
             uint playerEva = player.Evaluate;
             MatchQueue cur = new MatchQueue
@@ -78,6 +79,23 @@ namespace StdbModule.GamePlayModule.Match
             ctx.Db.match_queue.Username.Delete(username);
         }
 
+        private static void RemoveMatchCardWeight(this ReducerContext ctx, uint match_id)
+        {
+            foreach (var kv in CardModule.CardFactionWeightDefault)
+            {
+                ctx.TryRemoveCardWeight(match_id, kv.Key);
+            }
+            
+            foreach (var kv in CardModule.CardTypeWeightDefault)
+            {
+                ctx.TryRemoveCardWeight(match_id, kv.Key);
+            }
+
+            foreach (var kv in CardModule.CardLevelWeightDefault)
+            {
+                ctx.TryRemoveCardWeight(match_id, kv.Key);
+            }
+        }
         private static void InitializeGame(this ReducerContext ctx, MatchContext match)
         {
             var match_id = match.MatchId;
@@ -209,9 +227,18 @@ namespace StdbModule.GamePlayModule.Match
             ctx.Db.player_context.Username.Update(player);
         }
 
-        private static void ClearUpGame(this ReducerContext ctx, uint match_id)
+        public static void TryClearPracticeGame(this ReducerContext ctx, string username)
         {
-            
+            if (!ctx.TryFindPlayerContext(username, out var player)) throw new Exception("player not found");
+            if (!ctx.TryFindMatchContext(player.MatchId, out var match)) throw new Exception("match not found");
+            //clear player context
+            ctx.DeleteTimer(player.Username);
+            ctx.Db.player_base_hand.owner.Delete(player.Username);
+            ctx.Db.player_bench.username.Delete(username);
+            ctx.Db.player_context.Username.Delete(username);
+            //clear match context
+            ctx.RemoveMatchCardWeight(match.MatchId);
+            ctx.Db.match_context.MatchId.Delete(match.MatchId);
         }
 
         public static bool TryFindPlayerContext(this ReducerContext ctx, string username, out PlayerContext player)
